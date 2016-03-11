@@ -35,19 +35,19 @@ pubsub.on('message', function(channel, message) {
 });
 
 
-pubsub.subscribe('deploy');
+pubsub.subscribe('repc');
 
 
 listenOnList();
 
 
 function listenOnList() {
-  redis.blpop('repc:deploy', 0, function(err, reply) {
+  redis.blpop('repc', 0, function(err, reply) {
     if (err)
       console.error(`Error while waiting on list: ${err.message}`);
     else {
       const message = reply[0];
-      redis.publish('deploy', message);
+      redis.publish('repc', message);
     }
 
     setImmediate(listenOnList);
