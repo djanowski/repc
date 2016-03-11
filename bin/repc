@@ -6,6 +6,7 @@ const run     = require('../run');
 
 
 const redis   = Redis.createClient(process.env.REDIS_URL);
+const pubsub  = Redis.createClient(process.env.REDIS_URL);
 const program = process.argv[2];
 const args    = process.argv.slice(3);
 
@@ -16,7 +17,7 @@ if (!program) {
 }
 
 
-redis.on('subscribe', function(channel) {
+pubsub.on('subscribe', function(channel) {
   console.log(
 `Now listening on channel ${channel}.
 
@@ -27,11 +28,28 @@ When new messages arrive, I will invoke the following command:
 });
 
 
-redis.on('message', function(channel, message) {
+pubsub.on('message', function(channel, message) {
   console.log(`${channel}: ${message}`);
   console.log(`$ ${program} ${args.join(' ')}`);
   run(program, args);
 });
 
 
-redis.subscribe('deploy');
+pubsub.subscribe('deploy');
+
+
+listenOnList();
+
+
+function listenOnList() {
+  redis.blpop('repc:deploy', 0, function(err, reply) {
+    if (err)
+      console.error(`Error while waiting on list: ${err.message}`);
+    else {
+      const message = reply[0];
+      redis.publish('deploy', message);
+    }
+
+    setImmediate(listenOnList);
+  });
+}
