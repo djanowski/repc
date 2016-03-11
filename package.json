@@ -1,0 +1,11 @@
+{
+  "name": "repc",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "redis": "^2.5.0-1"
+  }
+}

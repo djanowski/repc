@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+
+const Redis   = require('redis');
+const run     = require('../run');
+
+
+const redis   = Redis.createClient(process.env.REDIS_URL);
+const program = process.argv[2];
+const args    = process.argv.slice(3);
+
+
+if (!program) {
+  console.error('No program given, I wouldn\'t know what to do.');
+  process.exit(1);
+}
+
+
+redis.on('subscribe', function(channel) {
+  console.log(
+`Now listening on channel ${channel}.
+
+When new messages arrive, I will invoke the following command:
+
+  $ ${program} ${args.join(' ')}
+`);
+});
+
+
+redis.on('message', function(channel, message) {
+  console.log(`${channel}: ${message}`);
+  console.log(`$ ${program} ${args.join(' ')}`);
+  run(program, args);
+});
+
+
+redis.subscribe('deploy');
